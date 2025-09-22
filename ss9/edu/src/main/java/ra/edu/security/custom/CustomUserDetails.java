@@ -17,6 +17,7 @@ import java.util.Set;
 @Data
 @Builder
 public class CustomUserDetails implements UserDetails {
+    private Long id;
     private String username;
     private String password;
     private String email;

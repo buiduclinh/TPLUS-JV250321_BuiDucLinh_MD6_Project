@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
+import static ra.edu.model.entity.Status.DRAFT;
 
 @Entity
 @Table(name = "courses")
@@ -16,7 +19,7 @@ import java.time.LocalDateTime;
 public class Course {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long course_id;
+    private Long courseId;
     private String title;
     private String description;
     @ManyToOne
@@ -25,7 +28,9 @@ public class Course {
     private Double price;
     private int durationHours;
     @Pattern(regexp = "DRAFT|PUBLISHED|ARCHIVED")
-    private Status status = Status.DRAFT;
+    private String status = "DRAFT";
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    @OneToMany(mappedBy = "course",cascade = CascadeType.ALL)
+    private List<Lesson> lessons;
 }

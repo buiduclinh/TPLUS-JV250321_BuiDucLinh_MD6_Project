@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import ra.edu.security.custom.CustomUserDetails;
+import ra.edu.service.LogoutService;
 
 import java.io.IOException;
 
@@ -22,7 +23,8 @@ public class JWTAuthFilter extends OncePerRequestFilter {
     private JWTProvider  jwtProvider;
     @Autowired
     private UserDetailsService userDetailsService;
-
+    @Autowired
+    private LogoutService logoutService;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = getTokenFromRequest(request);
@@ -31,6 +33,9 @@ public class JWTAuthFilter extends OncePerRequestFilter {
             CustomUserDetails customUserDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(username);
             Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, customUserDetails.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+        if (logoutService.isTokenBlacklisted(token)) {
+            throw new RuntimeException("Token is blacklisted");
         }
         filterChain.doFilter(request, response);
     }

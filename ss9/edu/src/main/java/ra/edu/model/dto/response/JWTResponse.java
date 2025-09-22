@@ -13,6 +13,7 @@ import java.util.Collection;
 @Data
 @Builder
 public class JWTResponse {
+    private Long id;
     private String username;
     private String password;
     private String email;

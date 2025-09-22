@@ -1,5 +1,6 @@
 package ra.edu.model.entity;
 
 public enum Status {
-    DRAFT,PUBLISHED,ARCHIVED
+    DRAFT,PUBLISHED,ARCHIVED,
+    ENROLLED, COMPLETED, DROPPED
 }
