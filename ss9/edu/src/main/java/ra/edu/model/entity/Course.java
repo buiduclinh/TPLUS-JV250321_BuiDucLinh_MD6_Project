@@ -9,8 +9,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static ra.edu.model.entity.Status.DRAFT;
-
 @Entity
 @Table(name = "courses")
 @AllArgsConstructor

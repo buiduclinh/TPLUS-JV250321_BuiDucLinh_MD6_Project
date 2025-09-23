@@ -14,56 +14,56 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/register")
+    @PostMapping
     public ResponseEntity<ApiResponseData<User>> register(@RequestBody UserRegister userRegister) {
         ApiResponseData<User> apiResponseData = userService.register(userRegister);
         return ResponseEntity.created(URI.create("/auth/register")).body(apiResponseData);
     }
 
-    @GetMapping("/userList")
-    public ResponseEntity<ApiResponseData<Page<User>>> getUserList(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size, @RequestParam String role, @RequestParam Boolean status) {
+    @GetMapping("/{status}")
+    public ResponseEntity<ApiResponseData<Page<User>>> getUserList(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size, @RequestParam String role, @PathVariable Boolean status) {
         ApiResponseData<Page<User>> apiResponseData = userService.getUsers(page, size, role, status);
         return ResponseEntity.ok(apiResponseData);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseData<User>> getUser(@PathVariable Long id) {
-        ApiResponseData<User> apiResponseData = userService.findById(id);
+    @GetMapping("/{user_id}")
+    public ResponseEntity<ApiResponseData<User>> getUser(@PathVariable Long user_id) {
+        ApiResponseData<User> apiResponseData = userService.findById(user_id);
         return ResponseEntity.ok(apiResponseData);
     }
 
-    @PutMapping("/{id}/role")
-    public ResponseEntity<ApiResponseData<User>> updateRole(@PathVariable Long id, @RequestParam List<String> newRole) {
-        ApiResponseData<User> apiResponseData = userService.updateRole(id, newRole);
+    @PutMapping("/{user_id}/role")
+    public ResponseEntity<ApiResponseData<User>> updateRole(@PathVariable Long user_id, @RequestParam List<String> newRole) {
+        ApiResponseData<User> apiResponseData = userService.updateRole(user_id, newRole);
         return ResponseEntity.ok(apiResponseData);
     }
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<ApiResponseData<User>> updateStatus(@PathVariable Long id, @RequestParam Boolean status) {
-        ApiResponseData<User> apiResponseData = userService.updateStatus(id, status);
+    @PutMapping("/{user_id}/status")
+    public ResponseEntity<ApiResponseData<User>> updateStatus(@PathVariable Long user_id, @RequestParam Boolean status) {
+        ApiResponseData<User> apiResponseData = userService.updateStatus(user_id, status);
         return ResponseEntity.ok(apiResponseData);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponseData<Void>> deleteUser(@PathVariable Long id) {
-        userService.delete(id);
+    @DeleteMapping("/{user_id}")
+    public ResponseEntity<ApiResponseData<Void>> deleteUser(@PathVariable Long user_id) {
+        userService.delete(user_id);
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponseData<User>> updateUser(@PathVariable Long id, @RequestBody User newUser,@RequestHeader Authentication authentication) {
-        ApiResponseData<User> apiResponseData = userService.updateUser(id, newUser, authentication);
+    @PutMapping("/{user_id}")
+    public ResponseEntity<ApiResponseData<User>> updateUser(@PathVariable Long user_id, @RequestBody User newUser,@RequestHeader Authentication authentication) {
+        ApiResponseData<User> apiResponseData = userService.updateUser(user_id, newUser, authentication);
         return ResponseEntity.ok(apiResponseData);
     }
 
-    @PutMapping("/{id}/password")
-    public ResponseEntity<ApiResponseData<User>> updatePassword(@PathVariable Long id, @RequestBody User newUser,@RequestHeader Authentication authentication) {
-        ApiResponseData<User> apiResponseData = userService.updateUserPassword(id, newUser, authentication);
+    @PutMapping("/{user_id}/password")
+    public ResponseEntity<ApiResponseData<User>> updatePassword(@PathVariable Long user_id, @RequestBody User newUser,@RequestHeader Authentication authentication) {
+        ApiResponseData<User> apiResponseData = userService.updateUserPassword(user_id, newUser, authentication);
         return ResponseEntity.ok(apiResponseData);
     }
 }

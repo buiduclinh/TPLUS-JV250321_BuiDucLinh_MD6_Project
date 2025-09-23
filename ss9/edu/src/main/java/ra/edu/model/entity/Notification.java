@@ -24,6 +24,6 @@ public class Notification {
     @Pattern(regexp = "NEW_COURSE|LESSON_UPDATED|ENROLLMENT_CONFIRMED")
     private String type;
     private String targetUrl;
-    private Boolean idRead;
+    private Boolean idRead = false;
     private LocalDateTime createdAt;
 }

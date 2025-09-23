@@ -24,6 +24,6 @@ public class Review {
     private User student;
     private int rating;
     private String comment;
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt;
 }

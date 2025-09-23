@@ -8,7 +8,6 @@ import ra.edu.model.entity.Course;
 import ra.edu.model.entity.Lesson;
 
 public interface LessonService {
-    ApiResponseData<Page<Lesson>> lessonPage(int pageNumber, int pageSize, String courseStatus);
 
     Lesson lessonById(Long lessonId);
 

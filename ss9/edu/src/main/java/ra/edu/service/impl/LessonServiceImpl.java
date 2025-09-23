@@ -30,17 +30,6 @@ public class LessonServiceImpl implements LessonService {
     @Autowired
     private CourseService courseService;
 
-    public ApiResponseData<Page<Lesson>> lessonPage(int pageNumber, int pageSize, String courseStatus) {
-        Page<Lesson> lessonPage = lessonRepository.findAllByCourseStatus(courseStatus, PageRequest.of(pageNumber, pageSize));
-        ApiResponseData<Page<Lesson>> apiResponseData = new ApiResponseData<>();
-        apiResponseData.setData(lessonPage);
-        apiResponseData.setMessage("lessonPage");
-        apiResponseData.setErrors(null);
-        apiResponseData.setSuccess(true);
-        apiResponseData.setStatus(HttpStatus.OK);
-        return apiResponseData;
-    }
-
     public Lesson lessonById(Long lessonId) {
         return lessonRepository.findById(lessonId).orElseThrow(() -> new EntityNotFoundException("lessonId"));
     }

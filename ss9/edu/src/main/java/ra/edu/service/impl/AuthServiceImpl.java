@@ -3,19 +3,19 @@ package ra.edu.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 import ra.edu.model.dto.request.UserLogin;
 import ra.edu.model.dto.response.ApiResponseData;
 import ra.edu.model.dto.response.JWTResponse;
+import ra.edu.model.dto.response.LessonPreviewResponse;
+import ra.edu.model.entity.Lesson;
 import ra.edu.security.custom.CustomUserDetails;
-import ra.edu.security.custom.CustomUserDetailsService;
 import ra.edu.security.jwt.JWTProvider;
 import ra.edu.service.AuthService;
+import ra.edu.service.LessonService;
 
 @Service
 @Slf4j
@@ -103,4 +103,6 @@ public class AuthServiceImpl implements AuthService {
         apiResponseData.setStatus(HttpStatus.OK);
         return  apiResponseData;
     }
+
+
 }

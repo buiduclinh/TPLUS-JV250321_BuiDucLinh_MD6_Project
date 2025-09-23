@@ -25,5 +25,4 @@ public class LessonProgress {
     private Boolean idCompleted;
     private LocalDateTime completedAt;
     private LocalDateTime lastAccessedAt;
-
 }

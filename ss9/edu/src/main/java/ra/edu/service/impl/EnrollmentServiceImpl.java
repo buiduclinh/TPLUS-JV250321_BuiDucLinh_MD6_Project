@@ -81,7 +81,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return apiResponseData;
     }
 
-    public ApiResponseData<Enrollment> getEnrollmentById(Enrollment enrollment, Long studentID, Authentication authentication) {
+    public ApiResponseData<Enrollment> getEnrollmentById(Long enrollmentId, Long studentID, Authentication authentication) {
         ApiResponseData<Enrollment> apiResponseData = new ApiResponseData<>();
         ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser(authentication);
         if (!jwtResponseApiResponseData.getSuccess()) {
@@ -100,7 +100,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             apiResponseData.setStatus(HttpStatus.UNAUTHORIZED);
             return apiResponseData;
         }
-        Enrollment enrollment1 = findById(enrollment.getEnrollmentId());
+        Enrollment enrollment1 = findById(enrollmentId);
         apiResponseData.setData(enrollment1);
         apiResponseData.setMessage("getEnrollmentById");
         apiResponseData.setStatus(HttpStatus.OK);
