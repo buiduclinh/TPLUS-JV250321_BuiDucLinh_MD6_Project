@@ -53,9 +53,9 @@ public class LessonServiceImpl implements LessonService {
         return apiResponseData;
     }
 
-    public ApiResponseData<Lesson> createLesson(Lesson lesson, Long courseId, Authentication authentication) {
+    public ApiResponseData<Lesson> createLesson(Lesson lesson, Long courseId) {
         ApiResponseData<Lesson> apiResponseData = new ApiResponseData<>();
-        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser(authentication);
+        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser();
         if(!jwtResponseApiResponseData.getSuccess()){
             apiResponseData.setErrors(jwtResponseApiResponseData.getErrors());
             apiResponseData.setSuccess(false);
@@ -85,9 +85,9 @@ public class LessonServiceImpl implements LessonService {
         return apiResponseData;
     }
 
-    public ApiResponseData<Lesson> updateLesson(Lesson lesson,Long courseId, Authentication authentication) {
+    public ApiResponseData<Lesson> updateLesson(Lesson lesson,Long courseId) {
         ApiResponseData<Lesson> apiResponseData = new ApiResponseData<>();
-        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser(authentication);
+        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser();
         if(!jwtResponseApiResponseData.getSuccess()){
             apiResponseData.setErrors(jwtResponseApiResponseData.getErrors());
             apiResponseData.setSuccess(false);
@@ -121,9 +121,9 @@ public class LessonServiceImpl implements LessonService {
         return apiResponseData;
     }
 
-    public ApiResponseData<Lesson> updateStatusLesson(Lesson lesson,Long courseId, Authentication authentication) {
+    public ApiResponseData<Lesson> updateStatusLesson(Lesson lesson,Long courseId) {
         ApiResponseData<Lesson> apiResponseData = new ApiResponseData<>();
-        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser(authentication);
+        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser();
         if(!jwtResponseApiResponseData.getSuccess()){
             apiResponseData.setErrors(jwtResponseApiResponseData.getErrors());
             apiResponseData.setSuccess(false);
@@ -153,9 +153,9 @@ public class LessonServiceImpl implements LessonService {
         return apiResponseData;
     }
 
-    public void deleteLessonById(Long lessonId,Long courseId, Authentication authentication) {
+    public void deleteLessonById(Long lessonId,Long courseId) {
         ApiResponseData<Lesson> apiResponseData = new ApiResponseData<>();
-        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser(authentication);
+        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser();
         if(!jwtResponseApiResponseData.getSuccess()){
             apiResponseData.setErrors(jwtResponseApiResponseData.getErrors());
             apiResponseData.setSuccess(false);

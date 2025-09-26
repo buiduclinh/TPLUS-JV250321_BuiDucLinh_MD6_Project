@@ -1,5 +1,6 @@
 package ra.edu.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,16 +15,16 @@ public class ReviewController {
     @Autowired
     private ReviewService reviewService;
 
-    @PutMapping("/api/reviews/{review_id}")
-    public ResponseEntity<ApiResponseData<Review>> updateReview(@RequestBody Review review, @PathVariable Long review_id, @RequestHeader Authentication authentication, @RequestParam Long course_id){
+    @PutMapping("/{review_id}")
+    public ResponseEntity<ApiResponseData<Review>> updateReview(@Valid @RequestBody Review review, @PathVariable Long review_id, @RequestParam("courseId") Long courseId){
         review.setReviewId(review_id);
-        ApiResponseData<Review> apiResponseData = reviewService.update(review,authentication,course_id);
+        ApiResponseData<Review> apiResponseData = reviewService.update(review,courseId);
         return ResponseEntity.ok(apiResponseData);
     }
 
-    @DeleteMapping("/api/reviews/{review_id}")
-    public ResponseEntity<ApiResponseData<Review>> deleteReview(@PathVariable Long review_id,@RequestHeader Authentication authentication){
-        ApiResponseData<Review> apiResponseData = reviewService.delete(review_id,authentication);
+    @DeleteMapping("/{review_id}")
+    public ResponseEntity<ApiResponseData<Review>> deleteReview(@PathVariable("review_id") Long reviewId){
+        ApiResponseData<Review> apiResponseData = reviewService.delete(reviewId);
         return ResponseEntity.ok(apiResponseData);
     }
 }

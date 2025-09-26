@@ -13,11 +13,11 @@ public interface LessonService {
 
     ApiResponseData<Lesson> findById(Long lessonId, String courseStatus);
 
-    ApiResponseData<Lesson> createLesson(Lesson lesson, Long courseId, Authentication authentication);
+    ApiResponseData<Lesson> createLesson(Lesson lesson, Long courseId);
 
-    ApiResponseData<Lesson> updateLesson(Lesson lesson, Long courseId, Authentication authentication);
+    ApiResponseData<Lesson> updateLesson(Lesson lesson, Long courseId);
 
-    ApiResponseData<Lesson> updateStatusLesson(Lesson lesson, Long courseId, Authentication authentication);
+    ApiResponseData<Lesson> updateStatusLesson(Lesson lesson, Long courseId);
 
-    void deleteLessonById(Long lessonId,Long courseId, Authentication authentication);
+    void deleteLessonById(Long lessonId,Long courseId);
 }

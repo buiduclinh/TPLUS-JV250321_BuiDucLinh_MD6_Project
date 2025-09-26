@@ -1,5 +1,6 @@
 package ra.edu.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -23,14 +24,14 @@ public class NotificationController {
     }
 
     @PutMapping("/{notification_id}/read")
-    public ResponseEntity<ApiResponseData<Notification>> updateNotification(@RequestBody Notification notification,@PathVariable Long notification_id) {
+    public ResponseEntity<ApiResponseData<Notification>> updateNotification(@Valid @RequestBody Notification notification, @PathVariable Long notification_id) {
         notification.setNotificationId(notification_id);
         ApiResponseData<Notification> apiResponseData = notificationService.notificationIsRead(notification_id);
         return ResponseEntity.ok(apiResponseData);
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponseData<Notification>> createNotification(@RequestBody Notification notification,@RequestParam Long userId) {
+    public ResponseEntity<ApiResponseData<Notification>> createNotification(@Valid @RequestBody Notification notification,@RequestParam Long userId) {
         ApiResponseData<Notification> apiResponseData = notificationService.createNotification(notification,userId);
         return  ResponseEntity.created(URI.create("/api/notifications/"+notification.getNotificationId())).body(apiResponseData);
     }

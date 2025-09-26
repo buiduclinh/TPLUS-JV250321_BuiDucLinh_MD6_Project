@@ -45,9 +45,10 @@ public class NotificationServiceImpl implements NotificationService {
     public ApiResponseData<Notification> notificationIsRead(Long notificationId){
         Notification notification = findById(notificationId);
         notification.setIdRead(true);
+        notificationRepository.save(notification);
         ApiResponseData<Notification> apiResponseData = new ApiResponseData<>();
         apiResponseData.setData(notification);
-        apiResponseData.setMessage("Notification found");
+        apiResponseData.setMessage("Notification had read");
         apiResponseData.setStatus(HttpStatus.OK);
         apiResponseData.setSuccess(Boolean.TRUE);
         apiResponseData.setErrors(null);
@@ -73,38 +74,5 @@ public class NotificationServiceImpl implements NotificationService {
        }
     }
 
-    public ApiResponseData<Page<CourseStatisticByStudents>> courseStatisticByStudents(int page, int size){
-        Page<CourseStatisticByStudents> courseStatisticByStudents = notificationRepository.findCourseStatisticByStudents(PageRequest.of(page, size));
-        ApiResponseData<Page<CourseStatisticByStudents>> apiResponseData = new ApiResponseData<>();
-        apiResponseData.setStatus(HttpStatus.OK);
-        apiResponseData.setSuccess(Boolean.TRUE);
-        apiResponseData.setErrors(null);
-        apiResponseData.setData(courseStatisticByStudents);
-        apiResponseData.setMessage("course statistics found");
-        return apiResponseData;
-    }
 
-    public ApiResponseData<Page<LessonEnrollmentCourseByStudent>> lessonEnrollmentCourseByStudents(Long studentId, int page, int size){
-        User student = userService.findByUserId(studentId);
-        Page<LessonEnrollmentCourseByStudent> lessonEnrollmentCourseByStudentPage = notificationRepository.findLessonEnrollmentCourseByStudents(student.getUserId(), PageRequest.of(page, size));
-        ApiResponseData<Page<LessonEnrollmentCourseByStudent>> apiResponseData = new ApiResponseData<>();
-        apiResponseData.setStatus(HttpStatus.OK);
-        apiResponseData.setSuccess(Boolean.TRUE);
-        apiResponseData.setErrors(null);
-        apiResponseData.setData(lessonEnrollmentCourseByStudentPage);
-        apiResponseData.setMessage("lesson enrollment course found");
-        return apiResponseData;
-    }
-
-    public ApiResponseData<Page<CourseStatisticByTeacher>> courseStatisticByTeacher(int page, int size, Long teacherId){
-        User teacher = userService.findByUserId(teacherId);
-        Page<CourseStatisticByTeacher> statisticByTeachers = notificationRepository.findCourseStatisticByTeachers(teacher.getUserId(), PageRequest.of(page, size));
-        ApiResponseData<Page<CourseStatisticByTeacher>> apiResponseData = new ApiResponseData<>();
-        apiResponseData.setStatus(HttpStatus.OK);
-        apiResponseData.setSuccess(Boolean.TRUE);
-        apiResponseData.setErrors(null);
-        apiResponseData.setData(statisticByTeachers);
-        apiResponseData.setMessage("course statistics found");
-        return apiResponseData;
-    }
 }

@@ -8,18 +8,25 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import ra.edu.model.dto.response.ApiResponseData;
 import ra.edu.model.dto.response.JWTResponse;
 import ra.edu.model.dto.response.LessonPreviewResponse;
+import ra.edu.model.dto.response.PostComment;
 import ra.edu.model.entity.Course;
 import ra.edu.model.entity.Lesson;
 import ra.edu.model.entity.Review;
 import ra.edu.model.entity.User;
 import ra.edu.repo.ReviewRepository;
+import ra.edu.repo.UserRepository;
 import ra.edu.service.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -34,6 +41,8 @@ public class ReviewServiceImpl implements ReviewService {
     private UserService userService;
     @Autowired
     private LessonService lessonService;
+    @Autowired
+    private UserRepository userRepository;
 
     public Review findById(Long id) {
         return reviewRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Review with id " + id + " not found!"));
@@ -50,12 +59,20 @@ public class ReviewServiceImpl implements ReviewService {
         return apiResponseData;
     }
 
-    public ApiResponseData<Review> comment(Review review, Long courseId) {
+    public ApiResponseData<Review> comment(PostComment postComment, Long courseId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Optional<User>  student = userRepository.findByUsername(authentication.getName());
         Course course = courseService.findById(courseId);
+
+        Review review =  new Review();
+        review.setComment(postComment.getComment());
         review.setCourse(course);
-        Review savedReview = reviewRepository.save(review);
+        review.setStudent(student.get());
+        review.setCreatedAt(LocalDateTime.now());
+        review.setRating(postComment.getRating());
+
         ApiResponseData<Review> apiResponseData = new ApiResponseData<>();
-        apiResponseData.setData(savedReview);
+        apiResponseData.setData(reviewRepository.save(review));
         apiResponseData.setErrors(null);
         apiResponseData.setSuccess(true);
         apiResponseData.setMessage("Success");
@@ -63,11 +80,12 @@ public class ReviewServiceImpl implements ReviewService {
         return apiResponseData;
     }
 
-    public ApiResponseData<Review> update(Review review, Authentication authentication, Long courseId) {
+    public ApiResponseData<Review> update(Review review, Long courseId) {
+        Review reviewSaved = findById(review.getReviewId());
         Course course = courseService.findById(courseId);
-        review.setCourse(course);
+        reviewSaved.setCourse(course);
         ApiResponseData<Review> apiResponseData = new ApiResponseData<>();
-        ApiResponseData<JWTResponse> jwtResponseData = authService.getUser(authentication);
+        ApiResponseData<JWTResponse> jwtResponseData = authService.getUser();
         if(!jwtResponseData.getSuccess()){
             apiResponseData.setStatus(HttpStatus.UNAUTHORIZED);
             apiResponseData.setMessage("Unauthorized");
@@ -75,17 +93,20 @@ public class ReviewServiceImpl implements ReviewService {
             apiResponseData.setSuccess(false);
             return apiResponseData;
         }
+
         JWTResponse jwtResponse = jwtResponseData.getData();
         Long userId = jwtResponse.getId();
-        User studentIdReview = userService.findByUserId(review.getStudent().getUserId());
-        if(!userId.equals(studentIdReview.getUserId())) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        User studentIdReview = userService.findByUserId(reviewSaved.getStudent().getUserId());
+        if(!userId.equals(studentIdReview.getUserId()) && !authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
             apiResponseData.setStatus(HttpStatus.UNAUTHORIZED);
             apiResponseData.setMessage("You are not the owner");
             apiResponseData.setErrors(jwtResponseData.getErrors());
             apiResponseData.setSuccess(false);
             return apiResponseData;
         }
-        Review reviewSaved = findById(review.getReviewId());
+
         reviewSaved.setComment(review.getComment());
         reviewSaved.setRating(review.getRating());
         reviewSaved.setStudent(studentIdReview);
@@ -100,10 +121,10 @@ public class ReviewServiceImpl implements ReviewService {
         return apiResponseData;
     }
 
-    public ApiResponseData<Review> delete(Long reviewId, Authentication authentication) {
+    public ApiResponseData<Review> delete(Long reviewId) {
         Review review =  findById(reviewId);
         ApiResponseData<Review> apiResponseData = new ApiResponseData<>();
-        ApiResponseData<JWTResponse> jwtResponseData = authService.getUser(authentication);
+        ApiResponseData<JWTResponse> jwtResponseData = authService.getUser();
         if(!jwtResponseData.getSuccess()){
             apiResponseData.setStatus(HttpStatus.UNAUTHORIZED);
             apiResponseData.setMessage("Unauthorized");

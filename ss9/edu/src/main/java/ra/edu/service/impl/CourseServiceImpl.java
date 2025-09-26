@@ -35,10 +35,10 @@ public class CourseServiceImpl implements CourseService {
     @Autowired
     private LessonRepository lessonRepository;
 
-    public ApiResponseData<Page<Course>> coursePages(int page, int pageSize, String status, Authentication authentication) {
+    public ApiResponseData<Page<Course>> coursePages(int page, int pageSize, String status) {
         Page<Course> coursePage = null;
         ApiResponseData<Page<Course>> apiResponseData = new ApiResponseData<>();
-        ApiResponseData<JWTResponse> apiResponseDataAuth = authService.getUser(authentication);
+        ApiResponseData<JWTResponse> apiResponseDataAuth = authService.getUser();
         if (!apiResponseDataAuth.getSuccess()) {
             apiResponseData.setStatus(HttpStatus.UNAUTHORIZED);
             apiResponseData.setMessage(apiResponseDataAuth.getMessage());
@@ -55,7 +55,11 @@ public class CourseServiceImpl implements CourseService {
             }
         }
         if (isAdmin) {
-            coursePage = courseRepository.findAll(PageRequest.of(page, pageSize));
+            if (status == null)
+                coursePage = courseRepository.findAll(PageRequest.of(page, pageSize));
+            else
+                coursePage = courseRepository.findAll(PageRequest.of(page, pageSize), status);
+
             apiResponseData.setMessage("Course Pages Found");
             apiResponseData.setErrors(null);
             apiResponseData.setSuccess(true);
@@ -110,14 +114,15 @@ public class CourseServiceImpl implements CourseService {
 
     public ApiResponseData<Course> updateCourse(Course course, Long teacherId) {
         Course course1 = courseRepository.findById(course.getCourseId()).orElseThrow(() -> new RuntimeException("Course Not Found"));
-        course.setCourseId(course1.getCourseId());
-        course.setTeacher(userService.findByUserId(teacherId));
-        course.setUpdatedAt(LocalDateTime.now());
-        course.setPrice(course.getPrice());
-        course.setDescription(course.getDescription());
-        course.setDurationHours(course.getDurationHours());
-        course.setStatus(course.getStatus());
-        courseRepository.save(course);
+        course1.setCourseId(course.getCourseId());
+        course1.setTeacher(userService.findByUserId(teacherId));
+        course1.setPrice(course.getPrice());
+        course1.setDescription(course.getDescription());
+        course1.setUpdatedAt(LocalDateTime.now());
+        course1.setDurationHours(course.getDurationHours());
+        course1.setTitle(course.getTitle());
+        course1.setLessons(course.getLessons());
+        courseRepository.save(course1);
         ApiResponseData<Course> apiResponseData = new ApiResponseData<>();
         apiResponseData.setMessage("Course Updated");
         apiResponseData.setErrors(null);
@@ -127,17 +132,24 @@ public class CourseServiceImpl implements CourseService {
         return apiResponseData;
     }
 
-    public ApiResponseData<Course> updateStatus(Course course, String status) {
-        Course course1 = findById(course.getCourseId());
-        course1.setStatus(status);
-        course1.setUpdatedAt(LocalDateTime.now());
-        ApiResponseData<Course> apiResponseData = new ApiResponseData<>();
-        apiResponseData.setMessage("Course Updated");
-        apiResponseData.setErrors(null);
-        apiResponseData.setSuccess(true);
-        apiResponseData.setStatus(HttpStatus.OK);
-        apiResponseData.setData(courseRepository.save(course1));
-        return apiResponseData;
+    public ApiResponseData<Course> updateStatus(Long courseId, String status) {
+        ApiResponseData<Course> response = new ApiResponseData<>();
+        Course course = findById(courseId);
+
+        if (!status.matches("DRAFT|PUBLISHED|ARCHIVED")) {
+            response.setSuccess(false);
+            response.setMessage("Invalid status. Must be DRAFT, PUBLISHED, or ARCHIVED");
+            response.setStatus(HttpStatus.BAD_REQUEST);
+            return response;
+        }
+        course.setStatus(status);
+        course.setUpdatedAt(LocalDateTime.now());
+        courseRepository.save(course);
+        response.setSuccess(true);
+        response.setMessage("Course Updated");
+        response.setStatus(HttpStatus.OK);
+        response.setData(course);
+        return response;
     }
 
     public void deleteCourse(Long id) {

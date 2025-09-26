@@ -22,7 +22,7 @@ public class CustomUserDetails implements UserDetails {
     private String password;
     private String email;
     private Boolean isActive;
-    private List<GrantedAuthority> grantedAuthorities;
+    private List<? extends GrantedAuthority> grantedAuthorities;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

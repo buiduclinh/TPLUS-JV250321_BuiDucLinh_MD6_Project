@@ -1,6 +1,7 @@
 package ra.edu.model.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,13 +17,17 @@ public class LessonProgress {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long progressId;
+    @NotNull
     @ManyToOne
-    @JoinColumn(name = "enrollment_id")
+    @JoinColumn(name = "enrollment_id", unique = true)
     private Enrollment enrollment;
+    @NotNull
     @ManyToOne
-    @JoinColumn(name = "lesson_id")
+    @JoinColumn(name = "lesson_id", unique = true)
     private Lesson lesson;
-    private Boolean idCompleted;
+    @NotNull
+    private Boolean idCompleted = false;
     private LocalDateTime completedAt;
-    private LocalDateTime lastAccessedAt;
+    @NotNull
+    private LocalDateTime lastAccessedAt =  LocalDateTime.now();
 }

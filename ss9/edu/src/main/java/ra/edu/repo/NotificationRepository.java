@@ -16,10 +16,5 @@ import java.util.List;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    @Query("SELECT new ra.edu.model.dto.response.CourseStatisticByStudents(c.courseId,c.title,COUNT(e)) FROM Course c JOIN Enrollment e ON e.course = c GROUP BY c.courseId, c.title")
-    Page<CourseStatisticByStudents> findCourseStatisticByStudents(Pageable pageable);
-    @Query("SELECT new ra.edu.model.dto.response.LessonEnrollmentCourseByStudent(u.userId , c.courseId, c.title, e.progressPercentage) FROM Course c JOIN Enrollment e ON e.course = c JOIN User u ON e.student = u WHERE u.userId = :studentId GROUP BY u.userId, c.courseId, c.title,e.progressPercentage")
-    Page<LessonEnrollmentCourseByStudent> findLessonEnrollmentCourseByStudents(@Param("studentId") Long studentId,Pageable pageable);
-    @Query("SELECT new ra.edu.model.dto.response.CourseStatisticByTeacher(c.courseId,c.title,COUNT(e.student.userId),COUNT(l.lessonId),AVG(e.progressPercentage)) FROM Course c JOIN c.lessons l JOIN Enrollment e ON e.course = c WHERE c.teacher.userId = :teacherId GROUP BY c.courseId, c.title")
-    Page<CourseStatisticByTeacher> findCourseStatisticByTeachers(@Param("teacherId") Long teacherId,Pageable pageable);
+
 }

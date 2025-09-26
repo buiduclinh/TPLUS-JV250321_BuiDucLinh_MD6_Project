@@ -7,12 +7,12 @@ import ra.edu.model.entity.Course;
 import ra.edu.model.entity.Lesson;
 
 public interface CourseService {
-    ApiResponseData<Page<Course>> coursePages(int page, int pageSize, String status, Authentication authentication);
+    ApiResponseData<Page<Course>> coursePages(int page, int pageSize, String status);
     Course findById(Long id);
     ApiResponseData<Course> getCourse(Long id);
     ApiResponseData<Course> saveCourse(Course course, Long teacherId);
     ApiResponseData<Course> updateCourse(Course course, Long teacherId);
-    ApiResponseData<Course> updateStatus(Course course, String status);
+    ApiResponseData<Course> updateStatus(Long courseId, String status);
     void deleteCourse(Long id);
     ApiResponseData<Page<Course>> findCourseByName(int page, int size,String courseName);
     ApiResponseData<Page<Course>> findCourseByTeacherId(int page, int size,Long teacherId);

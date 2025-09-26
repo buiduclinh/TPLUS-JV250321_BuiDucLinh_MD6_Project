@@ -1,5 +1,6 @@
 package ra.edu.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,34 +22,34 @@ public class LessonController {
     private ReviewService reviewService;
 
     @GetMapping("/{lesson_id}")
-    public ResponseEntity<ApiResponseData<Lesson>> findById(@PathVariable Long lesson_id, @RequestParam(defaultValue = "PUBLISHED") String courseStatus) {
-        ApiResponseData<Lesson> apiResponseData = lessonService.findById(lesson_id, courseStatus);
+    public ResponseEntity<ApiResponseData<Lesson>> findById(@PathVariable("lesson_id") Long lessonId, @RequestParam(defaultValue = "PUBLISHED") String courseStatus) {
+        ApiResponseData<Lesson> apiResponseData = lessonService.findById(lessonId, courseStatus);
         return ResponseEntity.status(HttpStatus.OK).body(apiResponseData);
     }
 
     @PutMapping("/{lesson_id}")
-    public ResponseEntity<ApiResponseData<Lesson>> update(@PathVariable Long lesson_id, @RequestBody Lesson lesson,@RequestParam Long courseId, @RequestHeader Authentication authentication) {
-        lesson.setLessonId(lesson_id);
-        ApiResponseData<Lesson> apiResponseData = lessonService.updateLesson(lesson,courseId,authentication);
+    public ResponseEntity<ApiResponseData<Lesson>> update(@PathVariable("lesson_id") Long lessonId, @Valid @RequestBody Lesson lesson, @RequestParam Long courseId) {
+        lesson.setLessonId(lessonId);
+        ApiResponseData<Lesson> apiResponseData = lessonService.updateLesson(lesson,courseId);
         return ResponseEntity.status(HttpStatus.OK).body(apiResponseData);
     }
 
     @PutMapping("/{lesson_id}/publish")
-    public ResponseEntity<ApiResponseData<Lesson>> updateStatus(@PathVariable Long lesson_id,@RequestBody Lesson lesson, @RequestParam Long courseId, @RequestHeader Authentication authentication) {
-        lesson.setLessonId(lesson_id);
-        ApiResponseData<Lesson> apiResponseData = lessonService.updateStatusLesson(lesson,courseId,authentication);
+    public ResponseEntity<ApiResponseData<Lesson>> updateStatus(@PathVariable("lesson_id") Long lessonId,@Valid @RequestBody Lesson lesson, @RequestParam Long courseId) {
+        lesson.setLessonId(lessonId);
+        ApiResponseData<Lesson> apiResponseData = lessonService.updateStatusLesson(lesson,courseId);
         return ResponseEntity.status(HttpStatus.OK).body(apiResponseData);
     }
 
     @DeleteMapping("/{lesson_id}")
-    public ResponseEntity<ApiResponseData<Void>> delete(@PathVariable Long lesson_id, @RequestParam Long courseId, @RequestHeader Authentication authentication) {
-        lessonService.deleteLessonById(lesson_id, courseId, authentication);
+    public ResponseEntity<ApiResponseData<Void>> delete(@PathVariable("lesson_id") Long lessonId, @RequestParam Long courseId) {
+        lessonService.deleteLessonById(lessonId, courseId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{lesson_id}/content_preview")
-    public ResponseEntity<ApiResponseData<LessonPreviewResponse>> previewContent(@PathVariable Long lesson_id){
-        ApiResponseData<LessonPreviewResponse> apiResponseData = reviewService.getLesson(lesson_id);
+    public ResponseEntity<ApiResponseData<LessonPreviewResponse>> previewContent(@PathVariable("lesson_id") Long lessonId){
+        ApiResponseData<LessonPreviewResponse> apiResponseData = reviewService.getLesson(lessonId);
         return ResponseEntity.ok(apiResponseData);
     }
 }

@@ -11,6 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,7 @@ import ra.edu.model.dto.request.UserLogin;
 import ra.edu.model.dto.request.UserRegister;
 import ra.edu.model.dto.response.ApiResponseData;
 import ra.edu.model.dto.response.JWTResponse;
+import ra.edu.model.dto.response.Passwords;
 import ra.edu.model.entity.BlackListToken;
 import ra.edu.model.entity.Role;
 import ra.edu.model.entity.User;
@@ -31,6 +35,7 @@ import ra.edu.service.UserService;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -56,6 +61,8 @@ public class UserServiceImpl implements UserService {
                 .email(userRegister.getEmail())
                 .isActive(true)
                 .role(getRoles(userRegister.getRole()))
+                .updatedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .build();
         userRepository.save(user);
         ApiResponseData<User> apiResponseData = new ApiResponseData<>();
@@ -84,8 +91,17 @@ public class UserServiceImpl implements UserService {
     }
 
     public ApiResponseData<Page<User>> getUsers(int page, int size, String role, Boolean status) {
-        Page<User> users = userRepository.findAll(PageRequest.of(page, size), role, status);
         ApiResponseData<Page<User>> apiResponseData = new ApiResponseData<>();
+        if(role == null && status == null){
+            Page<User> users = userRepository.findAll(PageRequest.of(page,size));
+            apiResponseData.setSuccess(true);
+            apiResponseData.setErrors(null);
+            apiResponseData.setData(users);
+            apiResponseData.setMessage("Users list Successfully");
+            apiResponseData.setStatus(HttpStatus.OK);
+            return apiResponseData;
+        }
+        Page<User> users = userRepository.findAll(PageRequest.of(page, size), role, status);
         apiResponseData.setSuccess(true);
         apiResponseData.setErrors(null);
         apiResponseData.setData(users);
@@ -120,7 +136,10 @@ public class UserServiceImpl implements UserService {
         ApiResponseData<User> apiResponseData = new ApiResponseData<>();
         User user = findByUserId(id);
 
-        if (user.getRole().contains("ADMIN")) {
+        boolean isTargetAdmin = user.getRole().stream()
+                .anyMatch(r -> r.getRole().equals("ADMIN"));
+
+        if (isTargetAdmin) {
             apiResponseData.setSuccess(false);
             apiResponseData.setErrors(null);
             apiResponseData.setMessage("Can't update Admin User");
@@ -138,17 +157,21 @@ public class UserServiceImpl implements UserService {
         return  apiResponseData;
     }
 
-    public ApiResponseData<User> updateStatus(Long id, Boolean status) {
+    public ApiResponseData<User> updateStatus(Long id) {
         ApiResponseData<User> apiResponseData = new ApiResponseData<>();
         User user = findByUserId(id);
-        if (user.getRole().contains("ADMIN")) {
+        boolean isTargetAdmin = user.getRole().stream()
+                .anyMatch(r -> r.getRole().equals("ADMIN"));
+
+        if (isTargetAdmin) {
             apiResponseData.setSuccess(false);
             apiResponseData.setErrors(null);
             apiResponseData.setMessage("Can't update Admin User");
             apiResponseData.setStatus(HttpStatus.FORBIDDEN);
             return apiResponseData;
         }
-        user.setIsActive(status);
+
+        user.setIsActive(false);
         userRepository.save(user);
         user.setUpdatedAt(LocalDateTime.now());
         apiResponseData.setSuccess(true);
@@ -176,43 +199,76 @@ public class UserServiceImpl implements UserService {
         apiResponseData.setStatus(HttpStatus.OK);
     }
 
-    public ApiResponseData<User> updateUser(Long id, User newUser,Authentication authentication) {
-        ApiResponseData<User> apiResponseData = new ApiResponseData<>();
-        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser(authentication);
+    public ApiResponseData<User> updateUser(Long id, UserRegister dto) {
+        ApiResponseData<User> response = new ApiResponseData<>();
+        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser();
         if(!jwtResponseApiResponseData.getSuccess()){
-            apiResponseData.setErrors(jwtResponseApiResponseData.getErrors());
-            apiResponseData.setSuccess(false);
-            apiResponseData.setStatus(HttpStatus.UNAUTHORIZED);
-            apiResponseData.setMessage("Invalid Token");
-            return apiResponseData;
+            response.setErrors(jwtResponseApiResponseData.getErrors());
+            response.setSuccess(false);
+            response.setStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("Invalid Token");
+            return response;
         }
+
         User user = findByUserId(id);
+        boolean isTargetAdmin = user.getRole().stream()
+                .anyMatch(r -> r.getRole().equals("ADMIN"));
+
+        if (isTargetAdmin) {
+            response.setSuccess(false);
+            response.setErrors(null);
+            response.setMessage("Can't update Admin User");
+            response.setStatus(HttpStatus.FORBIDDEN);
+            return response;
+        }
+
         JWTResponse jwtResponse = jwtResponseApiResponseData.getData();
         Long userLogin = jwtResponse.getId();
-        if(!userLogin.equals(user.getUserId())){
-            apiResponseData.setErrors(jwtResponseApiResponseData.getErrors());
-            apiResponseData.setSuccess(false);
-            apiResponseData.setStatus(HttpStatus.UNAUTHORIZED);
-            apiResponseData.setMessage("You cannot update User");
-            return apiResponseData;
+
+        boolean isLoginAdmin = false;
+        Collection<? extends GrantedAuthority> authorities = jwtResponse.getAuthorities();
+        for (GrantedAuthority grantedAuthority : authorities) {
+            if(grantedAuthority.getAuthority().equals("ROLE_ADMIN")){
+                isLoginAdmin = true;
+                break;
+            }
         }
-        newUser.setUpdatedAt(LocalDateTime.now());
-        newUser.setIsActive(user.getIsActive());
-        newUser.setRole(user.getRole());
-        newUser.setUsername(user.getUsername());
-        newUser.setEmail(user.getEmail());
-        newUser.setPasswordHash(user.getPasswordHash());
-        apiResponseData.setSuccess(true);
-        apiResponseData.setErrors(null);
-        apiResponseData.setData(user);
-        apiResponseData.setMessage("User Successfully Updated");
-        apiResponseData.setStatus(HttpStatus.OK);
-        return apiResponseData;
+
+        if (!userLogin.equals(user.getUserId()) && !isLoginAdmin) {
+            response.setErrors(jwtResponseApiResponseData.getErrors());
+            response.setSuccess(false);
+            response.setStatus(HttpStatus.UNAUTHORIZED);
+            response.setMessage("You cannot update this User");
+            return response;
+        }
+
+        if (isLoginAdmin && dto.getRole() != null) {
+            List<Role> roles = dto.getRole().stream()
+                    .map(roleName -> roleRepository.findByRole(roleName)
+                            .orElseThrow(() -> new RuntimeException("Role not found: " + roleName)))
+                    .collect(Collectors.toList());
+            user.setRole(roles);
+        }
+
+        if(isLoginAdmin && dto.getIsActive() != null){
+            user.setIsActive(dto.getIsActive());
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
+
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+        }
+        response.setData(userRepository.save(user));
+        response.setSuccess(true);
+        response.setMessage("User Successfully Updated");
+        response.setStatus(HttpStatus.OK);
+        return response;
     }
 
-    public ApiResponseData<User> updateUserPassword(Long id, User newUser,Authentication authentication) {
+    public ApiResponseData<User> updateUserPassword(Long id, Passwords passwords) {
         ApiResponseData<User> apiResponseData = new ApiResponseData<>();
-        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser(authentication);
+        ApiResponseData<JWTResponse> jwtResponseApiResponseData = authService.getUser();
         if(!jwtResponseApiResponseData.getSuccess()){
             apiResponseData.setErrors(jwtResponseApiResponseData.getErrors());
             apiResponseData.setSuccess(false);
@@ -223,18 +279,32 @@ public class UserServiceImpl implements UserService {
         User user = findByUserId(id);
         JWTResponse jwtResponse = jwtResponseApiResponseData.getData();
         Long userLogin = jwtResponse.getId();
-        if(!userLogin.equals(user.getUserId())){
+
+        boolean isTargetAdmin = user.getRole().stream()
+                .anyMatch(r -> r.getRole().equals("ADMIN"));
+
+        if (isTargetAdmin) {
+            apiResponseData.setSuccess(false);
+            apiResponseData.setErrors(null);
+            apiResponseData.setMessage("Can't update Admin User");
+            apiResponseData.setStatus(HttpStatus.FORBIDDEN);
+            return apiResponseData;
+        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(!userLogin.equals(user.getUserId()) && !authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")) ){
             apiResponseData.setErrors(jwtResponseApiResponseData.getErrors());
             apiResponseData.setSuccess(false);
             apiResponseData.setStatus(HttpStatus.UNAUTHORIZED);
             apiResponseData.setMessage("You cannot update User");
             return apiResponseData;
         }
-        newUser.setUpdatedAt(LocalDateTime.now());
-        newUser.setPasswordHash(user.getPasswordHash());
+        user.setPasswordHash(passwordEncoder.encode(passwords.getPassword()));
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+
         apiResponseData.setSuccess(true);
         apiResponseData.setErrors(null);
-        apiResponseData.setData(user);
+        apiResponseData.setData(userRepository.save(user));
         apiResponseData.setMessage("User Successfully Updated");
         apiResponseData.setStatus(HttpStatus.OK);
         return apiResponseData;

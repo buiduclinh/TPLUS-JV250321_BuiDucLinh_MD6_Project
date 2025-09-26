@@ -1,7 +1,9 @@
 package ra.edu.validation;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.websocket.AuthenticationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,66 +16,63 @@ import java.util.Map;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            errors.put(error.getObjectName(), error.getDefaultMessage());
-        });
-        log.warn("Validation failed: {}",errors);
+
+    private ResponseEntity<ApiError> buildError(HttpStatus status, String message, Exception e) {
+        log.error("{}: {}", message, e.getMessage());
         ApiError apiError = new ApiError();
-        apiError.setCode(400);
-        apiError.setMessage(errors.get("message"));
+        apiError.setCode(status.value());
+        apiError.setMessage(message + ": " + e.getMessage());
+        return ResponseEntity.status(status).body(apiError);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors()
+                .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+
+        log.warn("Validation failed: {}", errors);
+
+        ApiError apiError = new ApiError();
+        apiError.setCode(HttpStatus.BAD_REQUEST.value());
+        apiError.setMessage("Validation failed");
+        apiError.setErrors(errors);
+
         return ResponseEntity.badRequest().body(apiError);
     }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ApiError> handleEntityNotFound(EntityNotFoundException ex) {
+        return buildError(HttpStatus.NOT_FOUND, "Entity not found", ex);
+    }
+
     @ExceptionHandler(HttpClientErrorException.Unauthorized.class)
-    public ResponseEntity<?> handleHttpClientErrorException(HttpClientErrorException.Unauthorized e) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("Missing Token or Invalidate Token", e.getMessage());
-        log.error("Missing Token or Invalidate Token: {}",errors);
-        ApiError apiError = new ApiError();
-        apiError.setCode(401);
-        apiError.setMessage(errors.get("Missing Token or Invalidate Token"));
-        return ResponseEntity.unprocessableEntity().body(apiError);
+    public ResponseEntity<ApiError> handleUnauthorized(HttpClientErrorException.Unauthorized e) {
+        return buildError(HttpStatus.UNAUTHORIZED, "Missing Token or Invalid Token", e);
     }
+
     @ExceptionHandler(HttpClientErrorException.Forbidden.class)
-    public ResponseEntity<?> handleHttpClientErrorException(HttpClientErrorException.Forbidden e) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("Can't allow to access", e.getMessage());
-        log.error("Can't allow to access: {}",errors);
-        ApiError apiError = new ApiError();
-        apiError.setCode(403);
-        apiError.setMessage(errors.get("Can't allow to access"));
-        return ResponseEntity.unprocessableEntity().body(apiError);
+    public ResponseEntity<ApiError> handleForbidden(HttpClientErrorException.Forbidden e) {
+        return buildError(HttpStatus.FORBIDDEN, "Access denied", e);
     }
+
     @ExceptionHandler(HttpClientErrorException.NotFound.class)
-    public ResponseEntity<?> handleHttpClientErrorException(HttpClientErrorException.NotFound e) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("Not found", e.getMessage());
-        log.error("Not found: {}",errors);
-        ApiError apiError = new ApiError();
-        apiError.setCode(404);
-        apiError.setMessage(errors.get("Not found"));
-        return ResponseEntity.unprocessableEntity().body(apiError);
+    public ResponseEntity<ApiError> handleNotFound(HttpClientErrorException.NotFound e) {
+        return buildError(HttpStatus.NOT_FOUND, "Resource not found", e);
     }
+
     @ExceptionHandler(HttpClientErrorException.Conflict.class)
-    public ResponseEntity<?> handleHttpClientErrorException(HttpClientErrorException.Conflict e) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("Can't access", e.getMessage());
-        log.error("Can't access: {}",errors);
-        ApiError apiError = new ApiError();
-        apiError.setCode(409);
-        apiError.setMessage(errors.get("Can't access"));
-        return ResponseEntity.unprocessableEntity().body(apiError);
+    public ResponseEntity<ApiError> handleConflict(HttpClientErrorException.Conflict e) {
+        return buildError(HttpStatus.CONFLICT, "Conflict occurred", e);
     }
+
     @ExceptionHandler(HttpServerErrorException.InternalServerError.class)
-    public ResponseEntity<?> handleHttpServerErrorException(HttpServerErrorException.InternalServerError e) {
-        Map<String, String> errors = new HashMap<>();
-        errors.put("Internal Server Error", e.getMessage());
-        log.error("Internal Server Error: {}",errors);
-        ApiError apiError = new ApiError();
-        apiError.setCode(500);
-        apiError.setMessage(errors.get("Internal Server Error"));
-        return ResponseEntity.unprocessableEntity().body(apiError);
+    public ResponseEntity<ApiError> handleInternalServer(HttpServerErrorException.InternalServerError e) {
+        return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", e);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleGeneric(Exception ex) {
+        return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error", ex);
     }
 }

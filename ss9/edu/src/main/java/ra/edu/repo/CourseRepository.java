@@ -13,7 +13,7 @@ import java.util.List;
 
 @Repository
 public interface CourseRepository extends JpaRepository<Course, Long> {
-    @Query("SELECT c FROM Course c WHERE (:status IS NULL OR :status = c.status) ")
+    @Query("SELECT c FROM Course c WHERE (:status IS NULL OR c.status = :status) ")
     Page<Course> findAll(Pageable pageable,  @Param("status") String status);
 
     Page<Course> findCourseByTitleContainingIgnoreCase(String courseName,Pageable pageable);
